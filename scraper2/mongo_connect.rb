@@ -7,6 +7,8 @@ require 'open-uri'
 require 'nokogiri'
 
 # bin/phantomjs --webdriver=9999
+# jobs -p | xargs kill -9
+
 require 'selenium-webdriver'
 
 hash = {}
@@ -45,6 +47,17 @@ end
 def execute_scraper2(full_link)
   hash = {}
   hash["transcript"] = get_captions(full_link)
+  hash["details"] = getDetails(full_link)
+  return hash
+end
+
+def getDetails(full_link)
+  hash = {}
+  page = Nokogiri::HTML(open(full_link))
+  hash["views"] = page.css(".watch-view-count").inner_html.gsub!(',','').to_i
+  hash["thumbnail"] = page.css("link[itemprop=thumbnailUrl]").first.attributes["href"].value
+  hash["link"] = full_link
+
   return hash
 end
 
@@ -79,10 +92,12 @@ def get_captions(full_link)
 
   cc = Nokogiri::HTML(transcript_container.attribute('innerHTML'))
 
-  total = "No transcript."
+
+
+  total = ""
 
   cc.css('.caption-line').each do |line|
-  	transcript_line = line.css('.caption-line-time').text.gsub("\n", " ") + " " + line.css('.caption-line-text').text.gsub("\n", " ")
+  	transcript_line = line.css('.caption-line-time').text.gsub("\n", " ") + " " + line.css('.caption-line-text').text.gsub("\n", " ") + " "
   	total += transcript_line
   end
 
@@ -93,7 +108,7 @@ def get_captions(full_link)
 end
 
 def send_post(hash)
-  uri = URI('http://45.55.245.215:80/links/new')
+  uri = URI('http://localhost:3000/api/videos/create')
   http = Net::HTTP.new(uri.host, uri.port)
   req = Net::HTTP::Post.new(uri.path, initheader = {'Content-Type' =>'application/json'})
   req.body = hash.to_json
