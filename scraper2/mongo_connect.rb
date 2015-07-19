@@ -47,7 +47,9 @@ end
 def execute_scraper2(full_link)
   hash = {}
   hash["transcript"] = get_captions(full_link)
-  hash["details"] = getDetails(full_link)
+  if hash["transcript"]
+    hash["details"] = getDetails(full_link)
+  end
   return hash
 end
 
@@ -56,6 +58,7 @@ def getDetails(full_link)
   page = Nokogiri::HTML(open(full_link))
   hash["views"] = page.css(".watch-view-count").inner_html.gsub!(',','').to_i
   hash["thumbnail"] = page.css("link[itemprop=thumbnailUrl]").first.attributes["href"].value
+  hash["title"] = page.css("#eow-title").inner_html
   hash["link"] = full_link
 
   return hash
