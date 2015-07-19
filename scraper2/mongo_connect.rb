@@ -108,7 +108,7 @@ def get_captions(full_link)
 end
 
 def send_post(hash)
-  uri = URI('http://localhost:3000/api/videos/create')
+  uri = URI('http://ghostify.herokuapp.com/api/videos/create')
   http = Net::HTTP.new(uri.host, uri.port)
   req = Net::HTTP::Post.new(uri.path, initheader = {'Content-Type' =>'application/json'})
   req.body = hash.to_json
