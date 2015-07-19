@@ -1,0 +1,4 @@
+gem 'httparty'
+gem 'json'
+gem 'rufus-scheduler'
+gem 'nokogiri'
