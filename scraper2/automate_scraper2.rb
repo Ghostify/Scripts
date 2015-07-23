@@ -43,9 +43,9 @@ def execute_scraping (array)
     puts "Scraping (#{ (count + 1) }/#{array.count}) #{full_link}"
     puts result = execute_scraper2(full_link)
     count = count + 1
-    if hash[""]
-    send_post(result)
-
+    if hash["transcript"] and hash["details"]
+      send_post(result)
+    end
   end
   return true
 end
@@ -66,7 +66,7 @@ def getDetails(full_link)
     page = Nokogiri::HTML(open(full_link))
     hash["views"] = page.css(".watch-view-count").inner_html.gsub!(',','').to_i
     hash["thumbnail"] = page.css("link[itemprop=thumbnailUrl]").first.attributes["href"].value
-    hash["title"] = page.css("#eow-title").inner_html
+    hash["title"] = page.css("#eow-title").inner_html.to_s.strip
     update_link(full_link, "details-success")
     return hash
   rescue Exception => e
@@ -107,9 +107,9 @@ def get_captions(full_link)
     end
     update_link(link, "transcript-success")
   rescue Exception => e
-    # driver.save_screenshot('screenshot.png')
+    driver.save_screenshot("#{link.split("=").last}.png")
     puts "Exception: #{e}"
-    update_link(link, "failed")
+    update_link(link, "transcript-failed")
   end
   driver.quit
   return total
