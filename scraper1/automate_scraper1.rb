@@ -3,11 +3,14 @@ require 'json'
 require 'rufus-scheduler'
 require 'open-uri'
 require 'nokogiri'
+require_relative '../management.rb'
 
+@mgt = Management.new(ARGV[0])
+puts @mgt.inspect
 
 work_queue = []
 def start
-  response = HTTParty.get('http://ghostify.herokuapp.com/channels/untouched')
+  response = HTTParty.get(@mgt.get_channels_url)
   if response.code == 200
     body = response.body
     work_queue = JSON.parse(body)
@@ -22,15 +25,13 @@ def start
 end
 
 def upload_links(data)
-    # puts data
-
-    base_link_url = "http://ghostify.herokuapp.com/api/link?full_link="
+    base_link_url = "#{@mgt.post_new_link}&full_link="
     data["urls"].each do |url|
       puts post_url = "#{base_link_url}#{url}"
       HTTParty.post(post_url)
     end
 
-    base_channel_url = "http://ghostify.herokuapp.com/api/channels/create?url="
+    base_channel_url = "#{@mgt.post_new_channel}&url="
     data["ids"].each do |id|
       puts post_url = "#{base_channel_url}#{id}"
       HTTParty.post(post_url)
@@ -110,7 +111,7 @@ def execute_scraper1(link)
   return hash
 end
 
-
+puts @mgt.get_channels_url
 scheduler = Rufus::Scheduler.new
 scheduler.every '10s' do
   # do something in 10 days
