@@ -107,7 +107,7 @@ def get_captions(full_link)
     end
     update_link(link, "transcript-success")
   rescue Exception => e
-    driver.save_screenshot("#{link.split("=").last}.png")
+    # driver.save_screenshot("#{link.split("=").last}.png")
     puts "Exception: #{e}"
     update_link(link, "transcript-failed")
   end
