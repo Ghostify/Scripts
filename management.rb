@@ -48,7 +48,7 @@ class Management
     elsif test_flag
       return "http://localhost:3000/links/progress/update"
     elsif production_flag
-      return "http://45.55.183.147/links/progress/update"
+      return "http://ghostify.herokuapp.com/links/progress/update"
     end
   end
 
@@ -58,7 +58,7 @@ class Management
     elsif test_flag
       return "http://localhost:3001/elastic/create"
     elsif production_flag
-      return "http://45.55.183.147/elastic/create"
+      return "http://104.236.65.251:3001/elastic/create"
     end
   end
 

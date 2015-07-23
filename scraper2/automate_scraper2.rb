@@ -43,7 +43,7 @@ def execute_scraping (array)
     puts "Scraping (#{ (count + 1) }/#{array.count}) #{full_link}"
     puts result = execute_scraper2(full_link)
     count = count + 1
-    if hash["transcript"] and hash["details"]
+    if hash["transcript"] != nil and hash["details"] != nil
       send_post(result)
     end
   end
@@ -53,6 +53,7 @@ end
 def execute_scraper2(full_link)
   hash = {}
   hash["transcript"] = get_captions(full_link)
+  puts "Done with trans"
   hash["full_link"] = full_link
   if !hash["transcript"].empty?
     hash["details"] = getDetails(full_link)
@@ -71,7 +72,7 @@ def getDetails(full_link)
     return hash
   rescue Exception => e
     update_link(full_link, "details-failed")
-    return nil
+    return hash
   end
 end
 
@@ -141,7 +142,7 @@ while (true)
     begin
       start()
     rescue Exception => e
-      puts e
+      puts "Start exeption: #{e}"
     end
   end
   sleep(5)

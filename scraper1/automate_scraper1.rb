@@ -25,13 +25,13 @@ def start
 end
 
 def upload_links(data)
-    base_link_url = "#{@mgt.post_new_link}&full_link="
+    base_link_url = "#{@mgt.post_new_link}?full_link="
     data["urls"].each do |url|
       puts post_url = "#{base_link_url}#{url}"
       HTTParty.post(post_url)
     end
 
-    base_channel_url = "#{@mgt.post_new_channel}&url="
+    base_channel_url = "#{@mgt.post_new_channel}?url="
     data["ids"].each do |id|
       puts post_url = "#{base_channel_url}#{id}"
       HTTParty.post(post_url)
