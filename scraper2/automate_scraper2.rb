@@ -1,3 +1,4 @@
+
 # phantomjs --webdriver=9999
 require "uri"
 require "net/http"
@@ -39,44 +40,45 @@ def execute_scraping (array)
   count = 0
   while (count < array.length)
     full_link = array[count]["full_link"]
+    short_link = array[count]["youtube_link"]
 
     puts "Scraping (#{ (count + 1) }/#{array.count}) #{full_link}"
-    puts result = execute_scraper2(full_link)
+    puts result = execute_scraper2(full_link, short_link)
     count = count + 1
-    if hash["transcript"] != nil and hash["details"] != nil
+    if result.has_key?("transcript") and result.hash_key?("details")
       send_post(result)
     end
   end
   return true
 end
 
-def execute_scraper2(full_link)
+def execute_scraper2(full_link, short_link)
   hash = {}
-  hash["transcript"] = get_captions(full_link)
-  puts "Done with trans"
+  hash["transcript"] = get_captions(full_link, short_link)
   hash["full_link"] = full_link
-  if !hash["transcript"].empty?
-    hash["details"] = getDetails(full_link)
+  if hash["transcript"] != ""
+    hash["details"] = getDetails(full_link, short_link)
   end
   return hash
 end
 
-def getDetails(full_link)
+def getDetails(full_link, short_link)
   begin
     hash = {}
     page = Nokogiri::HTML(open(full_link))
     hash["views"] = page.css(".watch-view-count").inner_html.gsub!(',','').to_i
     hash["thumbnail"] = page.css("link[itemprop=thumbnailUrl]").first.attributes["href"].value
     hash["title"] = page.css("#eow-title").inner_html.to_s.strip
-    update_link(full_link, "details-success")
+    hash["owner"] = page.css(".yt-user-info > a").inner_html.to_s
+    update_link(short_link, "details-success")
     return hash
   rescue Exception => e
-    update_link(full_link, "details-failed")
+    update_link(short_link, "details-failed")
     return hash
   end
 end
 
-def get_captions(full_link)
+def get_captions(full_link, short_link)
   # supply video ID or full YouTube URL from command line
   arg = full_link
   if arg =~ /^#{URI::regexp}$/
@@ -106,18 +108,26 @@ def get_captions(full_link)
     	transcript_line = line.css('.caption-line-time').text.gsub("\n", " ") + " " + line.css('.caption-line-text').text.gsub("\n", " ") + " "
     	total += transcript_line
     end
-    update_link(link, "transcript-success")
+    update_link(short_link, "transcript-success")
   rescue Exception => e
     # driver.save_screenshot("#{link.split("=").last}.png")
     puts "Exception: #{e}"
-    update_link(link, "transcript-failed")
+    if e["errorMessage"].include? "action-panel-trigger-transcript"
+      update_link(short_link, "transcript-unavailable")
+    elsif e["errorMessage"].include? "action-panel-overflow-button"
+      update_link(short_link, "button-unavailable")
+    elsif e["errorMessage"].include? "transcript-scrollbox"
+      update_link(short_link, "transcript-box-unavailable")
+    else
+      update_link(short_link, "scraping-failed")
+    end
   end
   driver.quit
   return total
 end
 
-def update_link(link, progress)
-  update_url = @mgt.update_link_progress + "?youtube=" + link + "&progress=" + progress
+def update_link(short_link, progress)
+  update_url = @mgt.update_link_progress + "?youtube=" + short_link + "&progress=" + progress
   return HTTParty.post(update_url)
 end
 
@@ -142,7 +152,7 @@ while (true)
     begin
       start()
     rescue Exception => e
-      puts "Start exeption: #{e}"
+      puts "Start exeption: #{e.backtrace}"
     end
   end
   sleep(5)
