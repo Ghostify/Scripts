@@ -93,10 +93,11 @@ def get_captions(full_link, short_link)
   puts "Link: (#{link})".yellow
 
   # PhantomJS server
-  driver = Selenium::WebDriver.for(:remote, :url => "http://localhost:9999")
-  wait = Selenium::WebDriver::Wait.new(:timeout => 10) # seconds
   total = ""
   begin
+    driver = Selenium::WebDriver.for(:remote, :url => "http://localhost:9999")
+    wait = Selenium::WebDriver::Wait.new(:timeout => 10) # seconds
+
     driver.navigate.to link
     overflow_button = driver.find_element(:id, 'action-panel-overflow-button')
     overflow_button.click
@@ -113,6 +114,7 @@ def get_captions(full_link, short_link)
     	total += transcript_line
     end
     update_link(short_link, "transcript-success")
+    driver.quit
   rescue Exception => e
     puts e.message.red
     e = e.message
@@ -128,7 +130,7 @@ def get_captions(full_link, short_link)
       update_link(short_link, "scraping-failed")
     end
   end
-  driver.quit
+
   return total
 end
 
