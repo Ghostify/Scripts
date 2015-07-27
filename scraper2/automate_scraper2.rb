@@ -8,6 +8,8 @@ require 'rufus-scheduler'
 require 'open-uri'
 require 'nokogiri'
 require_relative '../management.rb'
+require 'colorize'
+
 
 # bin/phantomjs --webdriver=9999
 # jobs -p | xargs kill -9
@@ -43,9 +45,10 @@ def execute_scraping (array)
     short_link = array[count]["youtube_link"]
 
     puts "Scraping (#{ (count + 1) }/#{array.count}) #{full_link}"
-    puts result = execute_scraper2(full_link, short_link)
+    result = execute_scraper2(full_link, short_link)
+
     count = count + 1
-    if result.has_key?("transcript") and result.hash_key?("details")
+    if result["transcript"] != nil and result["details"] != nil
       send_post(result)
     end
   end
@@ -73,6 +76,7 @@ def getDetails(full_link, short_link)
     update_link(short_link, "details-success")
     return hash
   rescue Exception => e
+    puts e.backtrace.red
     update_link(short_link, "details-failed")
     return hash
   end
@@ -86,7 +90,7 @@ def get_captions(full_link, short_link)
   else
     link = "http://www.youtube.com/watch?v=#{arg}"
   end
-  puts "Link: (#{link})"
+  puts "Link: (#{link})".yellow
 
   # PhantomJS server
   driver = Selenium::WebDriver.for(:remote, :url => "http://localhost:9999")
@@ -110,14 +114,16 @@ def get_captions(full_link, short_link)
     end
     update_link(short_link, "transcript-success")
   rescue Exception => e
-    # driver.save_screenshot("#{link.split("=").last}.png")
-    puts "Exception: #{e}"
-    if e["errorMessage"].include? "action-panel-trigger-transcript"
+    puts e.message.red
+    e = e.message
+    if e.include? "action-panel-trigger-transcript"
       update_link(short_link, "transcript-unavailable")
-    elsif e["errorMessage"].include? "action-panel-overflow-button"
+    elsif e.include? "action-panel-overflow-button"
       update_link(short_link, "button-unavailable")
-    elsif e["errorMessage"].include? "transcript-scrollbox"
+    elsif e.include? "transcript-scrollbox"
       update_link(short_link, "transcript-box-unavailable")
+    elsif e.include? "not currently visible"
+      update_link(short_link, "transcript-action-failed")
     else
       update_link(short_link, "scraping-failed")
     end
@@ -128,7 +134,9 @@ end
 
 def update_link(short_link, progress)
   update_url = @mgt.update_link_progress + "?youtube=" + short_link + "&progress=" + progress
-  return HTTParty.post(update_url)
+  res = HTTParty.post(update_url)
+  puts "Response: #{res.to_s.green}"
+  return res
 end
 
 def send_post(hash)
@@ -136,9 +144,8 @@ def send_post(hash)
   http = Net::HTTP.new(uri.host, uri.port)
   req = Net::HTTP::Post.new(uri.path, initheader = {'Content-Type' =>'application/json'})
   req.body = hash.to_json
-  puts req.body
   res = http.request(req)
-  puts "Response: #{res.body}"
+  puts "Response: #{res.body}".green
 end
 
 # arg = ARGV[0]
@@ -152,7 +159,8 @@ while (true)
     begin
       start()
     rescue Exception => e
-      puts "Start exeption: #{e.backtrace}"
+    #
+      puts "Start exeption: #{[e.backtrace, e.message, e.class].join("\n")}".red
     end
   end
   sleep(5)
