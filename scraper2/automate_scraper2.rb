@@ -10,6 +10,7 @@ require 'nokogiri'
 require_relative '../management.rb'
 require 'colorize'
 
+default_timeout 10
 
 # bin/phantomjs --webdriver=9999
 # jobs -p | xargs kill -9
