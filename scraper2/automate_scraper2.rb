@@ -10,8 +10,6 @@ require 'nokogiri'
 require_relative '../management.rb'
 require 'colorize'
 
-class HTTParty::Basement; default_timeout 10; end
-
 # bin/phantomjs --webdriver=9999
 # jobs -p | xargs kill -9
 
@@ -24,7 +22,7 @@ hash = {}
 work_queue = []
 
 def start
-  response = HTTParty.get(@mgt.get_links_url)
+  response = HTTParty.get(@mgt.get_links_url, timeout: 10)
   if response.code == 200
     body = response.body
     work_queue = JSON.parse(body)
