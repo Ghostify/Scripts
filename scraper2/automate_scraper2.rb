@@ -95,6 +95,7 @@ def get_captions(full_link, short_link)
   total = ""
   begin
     driver = Selenium::WebDriver.for(:remote, :url => "http://localhost:9999")
+    driver.manage.window.resize_to 1920, 1080
     wait = Selenium::WebDriver::Wait.new(:timeout => 6) # seconds
 
     driver.navigate.to link
@@ -121,14 +122,15 @@ def get_captions(full_link, short_link)
   rescue Exception => e
     puts e.message.red
     e = e.message
-    if e.include? "action-panel-trigger-transcript"
+    if e.include? "action-panel-trigger-transcript"         # No transcript
       update_link(short_link, "transcript-unavailable")
-    elsif e.include? "action-panel-overflow-button"
+    elsif e.include? "action-panel-overflow-button"         # Cant click button
       update_link(short_link, "button-unavailable")
-    elsif e.include? "transcript-scrollbox"
+    elsif e.include? "transcript-scrollbox"                 # Cant find scroll box
       update_link(short_link, "transcript-box-unavailable")
-    elsif e.include? "not currently visible"
+    elsif e.include? "not currently visible"                # Something is not visible
       update_link(short_link, "transcript-action-failed")
+      driver.save_screenshot("#{short_link}-notvisible-error.png")
     else
       update_link(short_link, "scraping-failed")
     end
