@@ -95,7 +95,7 @@ def get_captions(full_link, short_link)
   total = ""
   begin
     driver = Selenium::WebDriver.for(:remote, :url => "http://localhost:9999")
-    driver.manage.window.resize_to 1920, 1080
+    driver.manage.window.resize_to 1280, 800
     wait = Selenium::WebDriver::Wait.new(:timeout => 6) # seconds
 
     driver.navigate.to link
