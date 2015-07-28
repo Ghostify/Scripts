@@ -51,7 +51,7 @@ end
 def execute_scraping (array)
   count = 0
   if not ensure_phantom
-    puts `phantomjs --webdriver=9999 --ignore-ssl-errors=true --load-images=false`
+    puts `phantomjs --webdriver=9999 --ignore-ssl-errors=true --load-images=false &`
   end
 
   while (count < array.length)
