@@ -1,6 +1,5 @@
 cmd = `pgrep phantomjs`
-puts cmd
-if cmd != nil
+if cmd != ""
   puts "Yay!"
 else
   puts "Boo!"

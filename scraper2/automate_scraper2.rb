@@ -1,5 +1,5 @@
 
-# phantomjs --webdriver=9999 --ignore-ssl-errors=true --load-images=false
+# phantomjs --webdriver=9999 --ignore-ssl-errors=true
 
 require "uri"
 require "net/http"
@@ -39,8 +39,7 @@ end
 
 def ensure_phantom
   cmd = `pgrep phantomjs`
-  puts cmd
-  if cmd != nil
+  if cmd != ""
     return true
   else
     return false
