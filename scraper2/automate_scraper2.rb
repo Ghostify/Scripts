@@ -125,6 +125,9 @@ def get_captions(full_link, short_link)
       update_link(short_link, "transcript-box-unavailable")
     elsif e.include? "not currently visible"
       update_link(short_link, "transcript-action-failed")
+    elsif e.include? "id 'cp-1'"
+      update_link(short_link, "transcript-cp1-unavailable")
+      driver.save_screenshot("#{short_link}-cp1-error.png")
     else
       update_link(short_link, "scraping-failed")
     end
