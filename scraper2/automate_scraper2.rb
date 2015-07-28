@@ -1,5 +1,6 @@
 
-# phantomjs --webdriver=9999
+# phantomjs --webdriver=9999 --ignore-ssl-errors=true --load-images=false
+
 require "uri"
 require "net/http"
 require 'httparty'
@@ -36,9 +37,23 @@ def start
   end
 end
 
+def ensure_phantom
+  cmd = `pgrep phantomjs`
+  puts cmd
+  if cmd != nil
+    return true
+  else
+    return false
+  end
+end
+
 
 def execute_scraping (array)
   count = 0
+  if not ensure_phantom
+    puts `phantomjs --webdriver=9999 --ignore-ssl-errors=true --load-images=false`
+  end
+
   while (count < array.length)
     full_link = array[count]["full_link"]
     short_link = array[count]["youtube_link"]
@@ -93,26 +108,26 @@ def get_captions(full_link, short_link)
 
   # PhantomJS server
   total = ""
-  begin
-    driver = Selenium::WebDriver.for(:remote, :url => "http://localhost:9999")
-    driver.manage.window.resize_to 1280, 800
-    wait = Selenium::WebDriver::Wait.new(:timeout => 6) # seconds
+  driver = Selenium::WebDriver.for(:remote, :url => "http://localhost:9999")
+  driver.manage.window.resize_to 1280, 800
+  wait = Selenium::WebDriver::Wait.new(:timeout => 8) # seconds
 
+  begin
     driver.navigate.to link
-      driver.save_screenshot("pics/TO LINK-error.png")
+    driver.save_screenshot("pics/TO LINK-error.png")
     overflow_button = wait.until { driver.find_element(:id, 'action-panel-overflow-button') }
-          driver.save_screenshot("pics/CLICK MORE-error.png")
+    driver.save_screenshot("pics/CLICK MORE-error.png")
     overflow_button.click
-          driver.save_screenshot("pics/CLICKED MORE-error.png")
+    driver.save_screenshot("pics/CLICKED MORE-error.png")
 
     transcript_button = driver.find_element(:class, 'action-panel-trigger-transcript')
-          driver.save_screenshot("pics/ALMOST TRANS-error.png")
+    driver.save_screenshot("pics/ALMOST TRANS-error.png")
     transcript_button.click
-          driver.save_screenshot("pics/CLICKED TRANS-error.png")
+    driver.save_screenshot("pics/CLICKED TRANS-error.png")
 
     # wait for at least one transcript line
     wait.until { driver.find_element(:id => 'cp-1') }
-          driver.save_screenshot("pics/DONE WAITING FOR CP1-error.png")
+    driver.save_screenshot("pics/DONE WAITING FOR CP1-error.png")
     transcript_container = driver.find_element(:id, 'transcript-scrollbox')
     cc = Nokogiri::HTML(transcript_container.attribute('innerHTML'))
 
@@ -121,7 +136,6 @@ def get_captions(full_link, short_link)
     	total += transcript_line
     end
     update_link(short_link, "transcript-success")
-    driver.quit
   rescue Exception => e
     puts e.message.red
     e = e.message
@@ -141,6 +155,8 @@ def get_captions(full_link, short_link)
     else
       update_link(short_link, "scraping-failed")
     end
+  ensure
+    driver.quit
   end
 
   return total
