@@ -58,7 +58,7 @@ def execute_scraper2(full_link, short_link)
   hash = {}
   hash["transcript"] = get_captions(full_link, short_link)
   hash["full_link"] = full_link
-  if hash["transcript"] != ""
+  if hash["transcript"] != "" or hash["transcript"] != nil
     hash["details"] = getDetails(full_link, short_link)
   end
   return hash
@@ -99,17 +99,20 @@ def get_captions(full_link, short_link)
     wait = Selenium::WebDriver::Wait.new(:timeout => 6) # seconds
 
     driver.navigate.to link
-
-    wait.until { driver.find_element(:id, 'action-panel-overflow-button') }
-    overflow_button = driver.find_element(:id, 'action-panel-overflow-button')
+      driver.save_screenshot("pics/TO LINK-error.png")
+    overflow_button = wait.until { driver.find_element(:id, 'action-panel-overflow-button') }
+          driver.save_screenshot("pics/CLICK MORE-error.png")
     overflow_button.click
+          driver.save_screenshot("pics/CLICKED MORE-error.png")
 
-    wait.until { driver.find_element(:class, 'action-panel-trigger-transcript') }
     transcript_button = driver.find_element(:class, 'action-panel-trigger-transcript')
+          driver.save_screenshot("pics/ALMOST TRANS-error.png")
     transcript_button.click
+          driver.save_screenshot("pics/CLICKED TRANS-error.png")
 
     # wait for at least one transcript line
     wait.until { driver.find_element(:id => 'cp-1') }
+          driver.save_screenshot("pics/DONE WAITING FOR CP1-error.png")
     transcript_container = driver.find_element(:id, 'transcript-scrollbox')
     cc = Nokogiri::HTML(transcript_container.attribute('innerHTML'))
 
@@ -128,12 +131,13 @@ def get_captions(full_link, short_link)
       update_link(short_link, "button-unavailable")
     elsif e.include? "transcript-scrollbox"                 # Cant find scroll box
       update_link(short_link, "transcript-box-unavailable")
-    elsif e.include? "not currently visible"                # Something is not visible
+      driver.save_screenshot("pics/#{short_link}-box-error.png")
+    elsif e.include? "manipulated"                # Something is not visible
       update_link(short_link, "transcript-action-failed")
-      driver.save_screenshot("#{short_link}-notvisible-error.png")
+      driver.save_screenshot("pics/#{short_link}-notvisible-error.png")
     elsif e.include? "id 'cp-1'"
       update_link(short_link, "transcript-cp1-unavailable")
-      driver.save_screenshot("#{short_link}-cp1-error.png")
+      # driver.save_screenshot("#{short_link}-cp1-error.png")
     else
       update_link(short_link, "scraping-failed")
     end
