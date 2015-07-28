@@ -95,11 +95,15 @@ def get_captions(full_link, short_link)
   total = ""
   begin
     driver = Selenium::WebDriver.for(:remote, :url => "http://localhost:9999")
-    wait = Selenium::WebDriver::Wait.new(:timeout => 10) # seconds
+    wait = Selenium::WebDriver::Wait.new(:timeout => 6) # seconds
 
     driver.navigate.to link
+
+    wait.until { driver.find_element(:id, 'action-panel-overflow-button') }
     overflow_button = driver.find_element(:id, 'action-panel-overflow-button')
     overflow_button.click
+
+    wait.until { driver.find_element(:class, 'action-panel-trigger-transcript') }
     transcript_button = driver.find_element(:class, 'action-panel-trigger-transcript')
     transcript_button.click
 
